@@ -1,7 +1,13 @@
 <template>
   <div class="flex min-h-screen flex-col items-center justify-center">
     <HoppSmartSpinner v-if="signingInWithEmail" />
-    <AppLogo v-else class="h-16 w-16 rounded" />
+    <div v-else class="flex flex-col items-center">
+      <AppLogo class="h-16 w-16 rounded mb-8" />
+      <FirebaseLogin
+        v-if="!signingInWithEmail"
+        @hide-modal="onLoginModalClose"
+      />
+    </div>
     <pre v-if="error" class="mt-4 text-secondaryLight">{{ error }}</pre>
   </div>
 </template>
@@ -25,6 +31,11 @@ export default defineComponent({
       signingInWithEmail: false,
       error: null,
     }
+  },
+  methods: {
+    onLoginModalClose() {
+      // Do nothing or maybe redirect?
+    },
   },
   beforeMount() {
     initializeApp()

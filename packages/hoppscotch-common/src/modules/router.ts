@@ -48,6 +48,18 @@ export default <HoppModule>{
     })
 
     router.beforeEach(async (to, from) => {
+      if (import.meta.env.VITE_GUARDS_REQUIRE_AUTH === "true") {
+        const currentUser = platform.auth.getCurrentUser()
+        if (
+          !currentUser &&
+          to.name !== "enter" &&
+          !to.path.startsWith("/enter") &&
+          !to.path.startsWith("/oauth")
+        ) {
+          return "/enter"
+        }
+      }
+
       _isLoadingInitialRoute.value = isInitialRoute(from)
 
       const onBeforeRouteChangePromises: Promise<any>[] = []

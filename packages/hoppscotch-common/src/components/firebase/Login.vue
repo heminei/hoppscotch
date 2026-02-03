@@ -1,5 +1,141 @@
 <template>
+  <div v-if="!dialog">
+    <div class="p-6">
+      <template v-if="platform.auth.customLoginSelectorUI">
+        <component :is="platform.auth.customLoginSelectorUI" />
+      </template>
+
+      <template v-else-if="isLoadingAllowedAuthProviders">
+        <div class="flex justify-center">
+          <HoppSmartSpinner />
+        </div>
+      </template>
+
+      <template v-else>
+        <div v-if="mode === 'sign-in'" class="flex flex-col space-y-2">
+          <div class="text-center font-bold text-xl mb-4">{{ t('auth.login_to_hoppscotch') }}</div>
+          <HoppSmartItem
+            v-for="provider in allowedAuthProviders"
+            :key="provider.id"
+            :loading="provider.isLoading.value"
+            :icon="provider.icon"
+            :label="provider.label"
+            @click="provider.action"
+          />
+
+          <hr
+            v-if="
+              additionalLoginItems.length > 0 && allowedAuthProviders.length
+            "
+          />
+
+          <HoppSmartItem
+            v-for="loginItem in additionalLoginItems"
+            :key="loginItem.id"
+            :icon="loginItem.icon"
+            :label="loginItem.text(t)"
+            @click="doAdditionalLoginItemClickAction(loginItem)"
+          />
+        </div>
+        <form
+          v-if="mode === 'email'"
+          class="flex flex-col space-y-2"
+          @submit.prevent="signInWithEmail"
+        >
+          <div class="text-center font-bold text-xl mb-4">{{ t('auth.login_to_hoppscotch') }}</div>
+          <HoppSmartInput
+            v-model="form.email"
+            type="email"
+            placeholder=" "
+            :label="t('auth.email')"
+            input-styles="floating-input"
+          />
+
+          <HoppButtonPrimary
+            :loading="signingInWithEmail"
+            type="submit"
+            :label="`${t('auth.send_magic_link')}`"
+          />
+        </form>
+
+        <div
+          v-if="!allowedAuthProviders?.length && !additionalLoginItems.length"
+          class="flex flex-col items-center text-center"
+        >
+          <p>{{ t("state.require_auth_provider") }}</p>
+          <p>{{ t("state.configure_auth") }}</p>
+          <div class="mt-5">
+            <a
+              href="https://docs.hoppscotch.io/documentation/self-host/getting-started"
+            >
+              <HoppButtonSecondary
+                outline
+                filled
+                blank
+                :icon="IconFileText"
+                :label="t('state.self_host_docs')"
+              />
+            </a>
+          </div>
+        </div>
+        <div v-if="mode === 'email-sent'" class="flex flex-col px-4">
+          <div class="flex max-w-md flex-col items-center justify-center">
+            <icon-lucide-inbox class="h-6 w-6 text-accent" />
+            <h3 class="my-2 text-center text-lg">
+              {{ t("auth.we_sent_magic_link") }}
+            </h3>
+            <p class="text-center">
+              {{
+                t("auth.we_sent_magic_link_description", { email: form.email })
+              }}
+            </p>
+          </div>
+        </div>
+      </template>
+
+      <div
+        v-if="mode === 'sign-in' && tosLink && privacyPolicyLink"
+        class="text-tiny text-secondaryLight mt-4 text-center"
+      >
+        By signing in, you are agreeing to our
+        <HoppSmartAnchor
+          class="link"
+          :to="tosLink"
+          blank
+          label="Terms of Service"
+        />
+        and
+        <HoppSmartAnchor
+          class="link"
+          :to="privacyPolicyLink"
+          blank
+          label="Privacy Policy"
+        />
+      </div>
+      <div v-if="mode === 'email'" class="mt-4">
+        <HoppButtonSecondary
+          :label="t('auth.all_sign_in_options')"
+          :icon="IconArrowLeft"
+          class="!p-0"
+          @click="mode = 'sign-in'"
+        />
+      </div>
+      <div
+        v-if="mode === 'email-sent'"
+        class="flex flex-1 justify-between text-secondaryLight mt-4"
+      >
+        <HoppSmartAnchor
+          class="link"
+          :label="t('auth.re_enter_email')"
+          :icon="IconArrowLeft"
+          @click="mode = 'email'"
+        />
+      </div>
+    </div>
+  </div>
+
   <HoppSmartModal
+    v-else
     dialog
     :title="`${t('auth.login_to_hoppscotch')}`"
     styles="sm:max-w-md"
@@ -148,6 +284,20 @@
 import { Ref, onMounted, ref } from "vue"
 
 import { useI18n } from "@composables/i18n"
+
+
+// Props
+const props = defineProps({
+  dialog: {
+    type: Boolean,
+    default: true,
+  },
+})
+
+// Define emits
+const emit = defineEmits<{
+  (e: "hide-modal"): void
+}>()
 import { useStreamSubscriber } from "@composables/stream"
 import { useToast } from "@composables/toast"
 
@@ -165,10 +315,6 @@ import { LoginItemDef } from "~/platform/auth"
 import { PersistenceService } from "~/services/persistence"
 
 import * as E from "fp-ts/Either"
-
-const emit = defineEmits<{
-  (e: "hide-modal"): void
-}>()
 
 const { subscribeToStream } = useStreamSubscriber()
 const t = useI18n()
