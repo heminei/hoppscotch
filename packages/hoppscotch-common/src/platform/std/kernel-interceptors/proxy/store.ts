@@ -1,7 +1,7 @@
 import { Service } from "dioc"
 import { Store } from "~/kernel/store"
-import { settingsStore } from "~/newstore/settings"
 import * as E from "fp-ts/Either"
+import { getDefaultProxyUrl, getDefaultProxyUrlSync } from "~/helpers/proxyUrl"
 
 const STORE_NAMESPACE = "interceptors.proxy.v1"
 const SETTINGS_KEY = "settings"
@@ -20,7 +20,7 @@ interface StoredData {
 
 const DEFAULT_SETTINGS: ProxySettings = {
   version: "v1",
-  proxyUrl: settingsStore.value.PROXY_URL ?? "https://proxy.hoppscotch.io",
+  proxyUrl: getDefaultProxyUrlSync(),
   accessToken: import.meta.env.VITE_PROXYSCOTCH_ACCESS_TOKEN ?? "",
 }
 
@@ -39,7 +39,7 @@ export class KernelInterceptorProxyStore extends Service {
     await this.loadSettings()
 
     const watcher = await Store.watch(STORE_NAMESPACE, SETTINGS_KEY)
-    watcher.on("change", async ({ value }) => {
+    watcher.on("change", async ({ value }: { value: unknown }) => {
       if (value) {
         const storedData = value as StoredData
         this.settings = storedData.settings
@@ -96,7 +96,11 @@ export class KernelInterceptorProxyStore extends Service {
   }
 
   public async resetSettings(): Promise<void> {
-    this.settings = { ...DEFAULT_SETTINGS }
+    const proxyUrl = await getDefaultProxyUrl()
+    this.settings = {
+      ...DEFAULT_SETTINGS,
+      proxyUrl,
+    }
     await this.persistSettings()
   }
 }
