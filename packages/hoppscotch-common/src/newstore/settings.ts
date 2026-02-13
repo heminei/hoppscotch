@@ -3,7 +3,7 @@ import { Observable } from "rxjs"
 import { distinctUntilChanged, pluck } from "rxjs/operators"
 import type { KeysMatching } from "~/types/ts-utils"
 import DispatchingStore, { defineDispatchers } from "./DispatchingStore"
-import { DEFAULT_HOPP_PROXY_URL, getDefaultProxyUrl } from "~/helpers/proxyUrl"
+import { getDefaultProxyUrl, getDefaultProxyUrlSync } from "~/helpers/proxyUrl"
 
 export const HoppBgColors = ["system", "light", "dark", "black"] as const
 
@@ -88,7 +88,7 @@ export type SettingsDef = {
   ENABLE_EXPERIMENTAL_DOCUMENTATION: boolean
 }
 
-let defaultProxyURL = DEFAULT_HOPP_PROXY_URL
+let defaultProxyURL = getDefaultProxyUrlSync()
 
 getDefaultProxyUrl().then((url) => {
   defaultProxyURL = url

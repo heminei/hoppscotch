@@ -26,6 +26,7 @@ interface ImportMetaEnv {
   readonly VITE_SENTRY_ENVIRONMENT?: string
   readonly VITE_SENTRY_RELEASE_TAG?: string
 
+  readonly VITE_PROXY_URL?: string
   readonly VITE_PROXYSCOTCH_ACCESS_TOKEN?: string
 
   readonly VITE_GUARDS_REQUIRE_AUTH: string
