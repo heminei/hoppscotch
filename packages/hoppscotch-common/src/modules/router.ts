@@ -47,6 +47,16 @@ export default <HoppModule>{
       routes,
     })
 
+    // on desktop, org webviews carry their context as ?org= in the URL
+    // (e.g. app://hoppscotch/?org=test-org.hoppscotch.io). Vue Router
+    // strips query params during internal navigation, so we capture the
+    // initial ?org= value and re-inject it into every subsequent route.
+    // this is the single source of truth for org context on desktop,
+    // replacing the previous window.__HOPPSCOTCH_ORG__ global approach.
+    const initialOrgParam = new URLSearchParams(window.location.search).get(
+      "org"
+    )
+
     router.beforeEach(async (to, from) => {
       if (import.meta.env.VITE_GUARDS_REQUIRE_AUTH === "true") {
         const currentUser = platform.auth.getCurrentUser()
@@ -57,6 +67,20 @@ export default <HoppModule>{
           !to.path.startsWith("/oauth")
         ) {
           return "/enter"
+        }
+      }
+
+      // preserve the ?org= query param across all route transitions.
+      // the param originates from the Rust load command which sets it
+      // on the initial webview URL. without this guard, navigating to
+      // /orgs/login-required and then calling window.location.reload()
+      // would lose the org context.
+      if (initialOrgParam && !to.query.org) {
+        return {
+          path: to.path,
+          hash: to.hash,
+          params: to.params,
+          query: { ...to.query, org: initialOrgParam },
         }
       }
 

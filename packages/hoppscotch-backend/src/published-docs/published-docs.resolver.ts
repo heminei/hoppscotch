@@ -9,11 +9,16 @@ import {
   Query,
 } from '@nestjs/graphql';
 import { GqlThrottlerGuard } from 'src/guards/gql-throttler.guard';
-import { PublishedDocs, PublishedDocsCollection } from './published-docs.model';
+import {
+  PublishedDocs,
+  PublishedDocsCollection,
+  PublishedDocsVersion,
+} from './published-docs.model';
 import { GqlAuthGuard } from 'src/guards/gql-auth.guard';
 import { GqlUser } from 'src/decorators/gql-user.decorator';
 import {
   CreatePublishedDocsArgs,
+  FetchPublishedDocsArgs,
   UpdatePublishedDocsArgs,
 } from './input-type.args';
 import { User } from 'src/user/user.model';
@@ -58,6 +63,20 @@ export class PublishedDocsResolver {
 
     if (E.isLeft(collection)) throwErr(collection.left);
     return collection.right;
+  }
+
+  @ResolveField(() => [PublishedDocsVersion], {
+    description: 'Returns all versions of the published document (same slug)',
+  })
+  async versions(
+    @Parent() publishedDocs: PublishedDocs,
+  ): Promise<PublishedDocsVersion[]> {
+    const versions = await this.publishedDocsService.getPublishedDocsVersions(
+      publishedDocs.slug,
+    );
+
+    if (E.isLeft(versions)) throwErr(versions.left);
+    return versions.right;
   }
 
   // Queries
@@ -106,25 +125,13 @@ export class PublishedDocsResolver {
     TeamAccessRole.OWNER,
   )
   async teamPublishedDocsList(
-    @Args({
-      name: 'teamID',
-      type: () => ID,
-      description: 'Id of the team to add to',
-    })
-    teamID: string,
-    @Args({
-      name: 'collectionID',
-      type: () => ID,
-      description: 'Id of the collection to add to',
-      nullable: true,
-    })
-    collectionID: string | undefined,
-    @Args() args: OffsetPaginationArgs,
+    @Args()
+    args: FetchPublishedDocsArgs,
   ) {
     const docs = await this.publishedDocsService.getAllTeamPublishedDocs(
-      teamID,
-      collectionID,
-      args,
+      args.teamID,
+      args.collectionID,
+      { skip: args.skip, take: args.take },
     );
     return docs;
   }
