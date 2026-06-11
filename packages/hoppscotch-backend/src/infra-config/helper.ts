@@ -169,7 +169,7 @@ export async function getDefaultInfraConfigs(): Promise<DefaultInfraConfig[]> {
     },
     {
       name: InfraConfigEnum.REFRESH_TOKEN_VALIDITY,
-      value: '604800000', // 7 days in milliseconds
+      value: '7776000000', // 90 days in milliseconds
       isEncrypted: false,
     },
     {

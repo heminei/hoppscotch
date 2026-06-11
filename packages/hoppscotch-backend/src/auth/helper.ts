@@ -52,7 +52,7 @@ export const authCookieHandler = (
 
   // Set default values if parsing results in NaN
   if (isNaN(accessTokenValidityInMs)) accessTokenValidityInMs = 86400000; // Default: 1 day
-  if (isNaN(refreshTokenValidityInMs)) refreshTokenValidityInMs = 604800000; // Default: 7 days
+  if (isNaN(refreshTokenValidityInMs)) refreshTokenValidityInMs = 7776000000; // Default: 90 days
 
   res.cookie(AuthTokenType.ACCESS_TOKEN, authTokens.access_token, {
     httpOnly: true,

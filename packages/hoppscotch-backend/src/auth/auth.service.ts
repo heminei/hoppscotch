@@ -108,7 +108,7 @@ export class AuthService {
     };
 
     const refreshToken = await this.jwtService.sign(refreshTokenPayload, {
-      expiresIn: this.configService.get('INFRA.REFRESH_TOKEN_VALIDITY'), //7 Days
+      expiresIn: this.configService.get('INFRA.REFRESH_TOKEN_VALIDITY'), //90 Days
     });
 
     const refreshTokenHash = await argon2.hash(refreshToken);
