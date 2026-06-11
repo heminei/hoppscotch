@@ -7,7 +7,6 @@ import {
   isValidProxyUrl,
 } from "~/helpers/proxyUrl"
 import * as E from "fp-ts/Either"
-import { getDefaultProxyUrl, getDefaultProxyUrlSync } from "~/helpers/proxyUrl"
 
 const STORE_NAMESPACE = "interceptors.proxy.v1"
 const SETTINGS_KEY = "settings"

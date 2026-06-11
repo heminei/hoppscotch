@@ -25,8 +25,8 @@ export const getDefaultProxyUrl = async () => {
       return res.right.value
     }
 
-    return getDefaultProxyUrlSync()
+    return DEFAULT_HOPP_PROXY_URL
   }
 
-  return getDefaultProxyUrlSync()
+  return DEFAULT_HOPP_PROXY_URL
 }
